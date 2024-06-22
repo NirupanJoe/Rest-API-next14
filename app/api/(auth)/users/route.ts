@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import connect from '@/lib/db'
 import User from '@/lib/modals/user'
+import { Types } from 'mongoose';
  
 export const GET = async(request: Request) => {
   try {
@@ -28,6 +29,36 @@ export const POST = async(request: Request) => {
     })
   } catch (error: any) {
     return new NextResponse('Error creating user ' + error.message, {
+      status: 500
+    })
+  }
+}
+
+export const PATCH = async(request: Request) => {
+  try {
+    await connect();
+    const body = await request.json();
+    const { _id, name } = body
+
+    if (!_id || !name) {
+      return new NextResponse('ID or name not found', {
+        status: 400
+      })
+    }
+
+    if (!Types.ObjectId.isValid(_id)) {
+      return new NextResponse('Invalid ID', {
+        status: 400
+      })
+    }
+
+    const user = await User.findByIdAndUpdate(body._id, body, {new: true});
+    
+    return new NextResponse(JSON.stringify(user), {
+      status: 200
+    })
+  } catch (error: any) {
+    return new NextResponse('Error updating user ' + error.message, {
       status: 500
     })
   }
