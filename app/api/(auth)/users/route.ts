@@ -16,3 +16,19 @@ export const GET = async(request: Request) => {
     })
   }
 }
+
+export const POST = async(request: Request) => {
+  try {
+    await connect();
+    const body = await request.json();
+    const user = await User.create(body);
+    
+    return new NextResponse(JSON.stringify(user), {
+      status: 201
+    })
+  } catch (error: any) {
+    return new NextResponse('Error creating user ' + error.message, {
+      status: 500
+    })
+  }
+}
