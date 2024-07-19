@@ -107,3 +107,48 @@ export const PATCH = async(request: Request, { params }: any) => {
         })
     }
 }
+
+export const DELETE = async(request: Request, { params }: any) => {
+    const blogId = params.blog;
+    try {
+        const { searchParams } = new URL(request.url);
+        const userId = searchParams.get("userId");
+        if (!userId || !Types.ObjectId.isValid(userId)) {
+            return new NextResponse("Invalid user ID", {
+                status: 400
+            })
+        }
+        if (!blogId || !Types.ObjectId.isValid(blogId)) {
+            return new NextResponse("Invalid blog ID", {
+                status: 400
+            })
+        }
+        await connect();
+        const userExists = await User.findById(userId);
+        if (!userExists) {
+            return new NextResponse("User not found in the database", {
+                status: 404
+            })
+        }
+        const blogExists = await Blog.findOne({
+            _id: blogId,
+            user: userId
+        });
+        if (!blogExists) {
+            return new NextResponse("Blog not found in the database", {
+                status: 404
+            })
+        }
+        const deletedBlog = await Blog.findByIdAndDelete(blogId);
+        return new NextResponse(JSON.stringify({
+            message: "Blog deleted",
+            blog: deletedBlog
+        }), {
+            status: 200
+        })
+    } catch (error: any) {
+        return new NextResponse('Error deleting blog ' + error.message, {
+            status: 500
+        })
+    }
+}
